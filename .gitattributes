@@ -1,0 +1,67 @@
+#####################################################
+#
+# Visual Studio files
+#
+#####################################################
+*.sln text eol=crlf merge=text
+*.csproj text eol=crlf merge=text
+*.cs text eol=crlf
+*.xaml text eol=crlf
+*.xml text eol=crlf
+*.config text eol=crlf
+*.resx text eol=crlf
+*.settings text eol=crlf
+*.cd text eol=crlf
+*.html text eol=crlf
+*.htm text eol=crlf
+*.css text eol=crlf
+*.scss text eol=crlf
+*.sass text eol=crlf
+*.less text eol=crlf
+*.js text eol=crlf
+*.lisp text eol=crlf
+*.clj text eol=crlf
+*.sql text eol=crlf
+*.php text eol=crlf
+*.txt text eol=crlf
+
+
+###############################################################################
+#
+# Binary files
+#
+###############################################################################
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.bmp binary
+*.ttf binary
+*.ico binary
+
+*.mov binary
+*.mp4 binary
+*.mp3 binary
+*.flv binary
+*.fla binary
+*.swf binary
+
+*.zip binary
+*.7z binary
+*.gz binary
+*.tar binary
+
+*.pdf binary
+*.vsdx binary
+*.doc binary
+*.docx binary
+*.dot binary
+*.rtf binary
+
+###############################################################################
+#
+# *nix Files
+#
+###############################################################################
+dockerdb/* text eol=lf
+*.sh text eol=lf

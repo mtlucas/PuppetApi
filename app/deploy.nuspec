@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>PuppetHieraApi</id>
+    <version>$version$</version>
+    <title>Puppet Hiera Data Lookup API</title>
+    <authors>$authors$</authors>
+    <owners></owners>
+    <copyright>$copyright$</copyright>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <projectUrl>$projectUrl$</projectUrl>
+    <language>en-US</language>
+  </metadata>
+  <files>
+    <file src="artifacts\output\**" exclude="**\appsettings.json;**\appsettings.Development.json;" />
+  </files>
+</package>

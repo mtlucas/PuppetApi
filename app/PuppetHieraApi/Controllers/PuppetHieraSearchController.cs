@@ -1,19 +1,23 @@
-using PuppetHieraApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using Serilog.Exceptions;
 using System;
 using System.IO;
+using System.Linq;
 using System.Diagnostics;
+using System.Reflection;
 using System.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using static SimpleExec.Command;
+using PuppetHieraApi.Models;
+using PuppetHieraApi.Api.WebHost.Attributes;
 
 namespace PuppetHieraApi.Controllers
 {
+    [ApiKey]
     [ApiController]
     [Route("api/[controller]")]
     public class PuppetHieraSearchController : ControllerBase
@@ -23,10 +27,9 @@ namespace PuppetHieraApi.Controllers
         /// </summary>
         /// <param name="hieraSearchRequest"></param>
         /// <returns></returns>
-        [HttpPost]
-        public async Task<IActionResult> HieraSearch(HieraApiPostData hieraSearchRequest)
+        [HttpGet]
+        public async Task<IActionResult> HieraSearch([FromQuery]HieraApiPostData hieraSearchRequest)
         {
-
             // Psuedo code:
             // 1. query Puppet Classifier and get env.json into json object (from string output):  https://puppet.com/docs/pe/2021.2/node_classifier_service_api.html
             // 2. extract (filter) json for environment name variables (only) into another variable
@@ -37,7 +40,7 @@ namespace PuppetHieraApi.Controllers
             // 6. populate and return json containing puppet ConsoleVariables and HieraSearchValue result
 
             // Issues:
-            // 1. Console variables returned as escaped values, but want non-escaped string, however, wrtten to disk is non-escaped
+            // 1. Console variables returned as escaped values and want to output non-escaped string, however, wrtten to disk is non-escaped -- manual hack on line 126
 
             const string envjsonEndpoint = "https://localhost:4433/classifier-api/v1/groups";
             HieraData hieraData = new HieraData();

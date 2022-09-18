@@ -4,6 +4,7 @@ using Serilog.Settings.Configuration;
 using System.Runtime.InteropServices;
 using System.Reflection;
 using Microsoft.OpenApi.Models;
+using PuppetHieraApi.Api.WebHost;
 
 try
 {
@@ -30,6 +31,15 @@ try
                 Url = new Uri("mailto:mike.lucas@wolterskluwer.com")
             },
         });
+        options.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+        {
+            Description = "Add your ApiKey here",
+            In = ParameterLocation.Header,
+            Name = "ApiKey",
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "ApiKeyScheme"
+        });
+        options.OperationFilter<AuthenticationRequirementsOperationFilter>();
         var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
         options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
     });

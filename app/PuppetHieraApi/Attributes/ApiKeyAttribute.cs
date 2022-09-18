@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 using System;
 using System.Reflection;
 
@@ -13,6 +14,7 @@ namespace PuppetHieraApi.Api.WebHost.Attributes
         private const string APIKEYNAME = "ApiKey";
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
+            Log.Debug("Validating ApiKey...");
             if (!context.HttpContext.Request.Headers.TryGetValue(APIKEYNAME, out var extractedApiKey))
             {
                 context.Result = new ContentResult()
@@ -35,6 +37,7 @@ namespace PuppetHieraApi.Api.WebHost.Attributes
                 };
                 return;
             }
+            Log.Debug("ApiKey validated successfully.");
             await next();
         }
     }

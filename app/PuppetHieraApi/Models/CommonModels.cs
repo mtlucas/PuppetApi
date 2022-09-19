@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace PuppetHieraApi.Models
 {
-    public class HieraApiPostData
+    public class HieraApiQueryData
     {
         // Environment (Node group) name is used to populate Hiera search with correct Puppet Console variables:
         //   Example:  puppet lookup --environment 2022_4 --merge deep --render-as json --facts ~/facts.json profile::admin_app_iis_api::appsettings

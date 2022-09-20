@@ -81,7 +81,7 @@ class Build : NukeBuild
                 .SetInformationalVersion(BuildVersion)
                 .SetCopyright(ProjectCopyright)
                 .SetSelfContained(SelfContained)
-                .SetRuntime(SelfContained ? "win-x64" : null)
+                .SetRuntime(SelfContained ? "linux-x64" : null)
                 .SetOutput(ArtifactsDirectory / "output"));
         });
 

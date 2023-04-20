@@ -6,7 +6,7 @@ using Serilog;
 using System;
 using System.Reflection;
 
-namespace PuppetHieraApi.Api.WebHost.Attributes
+namespace PuppetApi.Api.WebHost.Attributes
 {
     [AttributeUsage(validOn: AttributeTargets.Class)]
     public class ApiKeyAttribute : Attribute, IAsyncActionFilter

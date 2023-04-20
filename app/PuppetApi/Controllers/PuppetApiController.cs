@@ -12,21 +12,21 @@ using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using static SimpleExec.Command;
-using PuppetHieraApi.Models;
-using PuppetHieraApi.Api.WebHost.Attributes;
+using PuppetApi.Models;
+using PuppetApi.Api.WebHost.Attributes;
 
-namespace PuppetHieraApi.Controllers
+namespace PuppetApi.Controllers
 {
     [ApiKey]
     [ApiController]
-    [Route("api/[controller]")]
-    public class PuppetHieraSearchController : ControllerBase
+    public class PuppetApiController : ControllerBase
     {
         /// <summary>
         /// Searches and returns Puppet Hiera Values based on required input
         /// </summary>
         /// <param name="hieraSearchRequest"></param>
         /// <returns></returns>
+        [Route("api/hierasearch")]
         [HttpGet]
         public async Task<IActionResult> HieraSearch([FromQuery]HieraApiQueryData hieraSearchRequest)
         {
@@ -132,6 +132,50 @@ namespace PuppetHieraApi.Controllers
             Log.Information($"Puppet lookup returned from \"{hieraSearchRequest.HieraSearchKey}\" query: {hieraData.HieraSearchValue}");
             // Need to return values in JSON manually due to getting only raw results from Puppet lookup
             return Ok("{ \"HieraSearchValue\": " + hieraData.HieraSearchValue + " }");
+        }
+        /// <summary>
+        /// Execute puppet command with querystring parameters on puppet master
+        /// </summary>
+        /// <param name="PuppetCMDRequest"></param>
+        /// <returns></returns>
+        [Route("api/command")]
+        [HttpGet]
+        public async Task<IActionResult> PuppetCMD([FromQuery] string PuppetCMDRequest)
+        {
+            // Psuedo code:
+            // 1. Execute PUPPET command with querystring data, parsing and limited data validation
+            // 2. Forbid multi-command injection
+            // 3. Return status of command
+
+            Log.Information($"GET query data: {PuppetCMDRequest}");
+            //////////////////////////
+            /// Execute PuppetCMD  ///
+            //////////////////////////
+            Log.Information($"Executing puppet CMD...");
+            Log.Information($"QueryString: {PuppetCMDRequest}");
+            if (new string[] { ";", "&&", "||" }.Any(s => PuppetCMDRequest.ToLower().Contains(s)))
+            {
+                Log.Warning("WARNING: Forbidden to execute multiple commands");
+                return StatusCode(501, "Forbidden to execute multiple commands");
+            }
+            string[] QueryString = PuppetCMDRequest.Split(' ');
+            int exitCode = 0;
+            var (cmdResult, cmdError) = await ReadAsync("/usr/local/bin/puppet",
+                QueryString,
+                handleExitCode: code => (exitCode = code) < 2);
+            if (exitCode != 0)
+            {
+                Log.Error($"puppet RESULT: {cmdResult}");
+                Log.Error($"puppet ERROR: {cmdError}");
+                return StatusCode(500, $"RESULT returned from: \"puppet {PuppetCMDRequest}\":\n{cmdResult}\nERROR: {cmdError}\n");
+            }
+            if (System.String.IsNullOrEmpty(cmdResult))
+            {
+                Log.Error("puppet returned null or empty string.");
+                return NotFound("puppet returned null or empty string.");
+            }
+            Log.Information($"puppet RESULT: {cmdResult}");
+            return Ok(cmdResult);
         }
     }
 }

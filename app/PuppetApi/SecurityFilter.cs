@@ -4,9 +4,9 @@ using System.Reflection;
 using System.Collections.Generic;
 using Swashbuckle.AspNetCore.Filters;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using PuppetHieraApi.Api.WebHost.Attributes;
+using PuppetApi.Api.WebHost.Attributes;
 
-namespace PuppetHieraApi.Api.WebHost
+namespace PuppetApi.Api.WebHost
 {
     // Filter that will secure ApiKey Swagger Api endpoints (Padlocks)
     public class AuthenticationRequirementsOperationFilter : IOperationFilter

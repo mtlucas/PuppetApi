@@ -4,7 +4,7 @@ using Serilog.Settings.Configuration;
 using System.Runtime.InteropServices;
 using System.Reflection;
 using Microsoft.OpenApi.Models;
-using PuppetHieraApi.Api.WebHost;
+using PuppetApi.Api.WebHost;
 
 try
 {
@@ -23,8 +23,8 @@ try
         options.SwaggerDoc("v1", new OpenApiInfo
         {
             Version = "v1",
-            Title = "Puppet Hiera Search API",
-            Description = "An ASP.NET Core Web API for searching and retrieving Puppet Hiera data (source of truth)",
+            Title = "Puppet API",
+            Description = "An ASP.NET Core Web API for searching and retrieving Puppet Hiera data (source of truth), and another to execute commands.",
             Contact = new OpenApiContact
             {
                 Name = "Michael Lucas",
@@ -62,7 +62,7 @@ try
     app.MapControllers();
 
     app.Run();
-    Log.Debug("PuppetHieraApi application started.");
+    Log.Debug("PuppetApi application started.");
 }
 catch (Exception ex)
 {

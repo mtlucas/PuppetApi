@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <Title>PuppetHieraApi</Title>
+    <Title>PuppetApi</Title>
     <Authors>Michael Lucas</Authors>
     <Company>Pharmacy OneSource</Company>
     <Description>RESTful WebApi for querying Puppet Hiera data</Description>
@@ -11,7 +11,7 @@
     <Copyright>© 2022 Pharmacy OneSource</Copyright>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://dev-gitlab.dev.rph.int/rollout/PuppetHieraApi.git</RepositoryUrl>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -34,6 +34,10 @@
 
   <ItemGroup>
     <Content Update="appsettings*.json" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Logs\" />
   </ItemGroup>
 
 </Project>

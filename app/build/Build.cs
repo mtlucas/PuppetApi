@@ -29,7 +29,7 @@ class Build : NukeBuild
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")] readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
     [Parameter("Nuspec Filename")] readonly string NuspecFile = "deploy.nuspec"; //default
     [Parameter("App build version")] readonly string BuildVersion; //Must specify
-    [Parameter("Project Description")] readonly string ProjectDescription = "PuppetHieraApi Nuget Package built on " + DateTime.UtcNow.ToString("MM-dd-yyyy"); //default
+    [Parameter("Project Description")] readonly string ProjectDescription = "PuppetApi Nuget Package built on " + DateTime.UtcNow.ToString("MM-dd-yyyy"); //default
     [Parameter("Project Author")] readonly string ProjectAuthor = "Michael Lucas (mike.lucas@wolterskluwer.com)"; //default
     [Parameter("Project Copyright")] readonly string ProjectCopyright = "Copyright 2022"; //default
     [Parameter("Project VCS Url")] readonly string ProjectUrl = "https://github.com/mtlucas/PuppetHieraApi"; //default

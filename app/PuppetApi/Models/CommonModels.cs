@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System.Text.Json.Serialization;
 
-namespace PuppetHieraApi.Models
+namespace PuppetApi.Models
 {
     public class HieraApiQueryData
     {

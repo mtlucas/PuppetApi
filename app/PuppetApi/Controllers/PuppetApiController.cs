@@ -75,6 +75,7 @@ namespace PuppetApi.Controllers
             /////////////////////////////////////////////
             /// Parse and Filter JSON for Environment ///
             /////////////////////////////////////////////
+            string tmpfile = "/tmp/" + Path.GetRandomFileName();
             if (String.IsNullOrEmpty(envjsonResult))
             {
                 Log.Error("Puppet Classifier result returned empty string, is there a problem with it?");
@@ -85,25 +86,45 @@ namespace PuppetApi.Controllers
                 // Parse result into Jarray
                 JArray envjsonParse = JArray.Parse(envjsonResult);
                 // Filter JSON to specific environment Console variables
-                Log.Debug($"Begin JSONPath filter on envjson using environment {hieraSearchRequest.Environment}...");
-                IEnumerable<JToken> envjsonTokens = envjsonParse.SelectTokens("$..[?(@.name == '" + hieraSearchRequest.Environment + "')].variables", false);  // Do not error on bad match
-                Log.Debug($"Number of tokens matched: {envjsonTokens.Count()}");
+                Log.Information($"Begin JSONPath filter on envjson using environment {hieraSearchRequest.Environment}...");
+                // Parent lookup
+                string envjsonParent = envjsonParse.SelectToken("$..[?(@.name == '" + hieraSearchRequest.Environment + "')].parent", false)?.ToObject<string>();
+                Log.Debug($"Parent environment: {envjsonParent}");
+                // Prepare the JPath strings outside of the SelectTokens calls to avoid string concatenation inside the loop
+                string parentJPath = "$..[?(@.id == '" + envjsonParent.Replace("'", "\\'") + "')].variables";
+                string childJPath = "$..[?(@.name == '" + hieraSearchRequest.Environment.Replace("'", "\\'") + "')].variables";
+                // Select tokens using the prepared JPaths
+                IEnumerable<JToken> envjsonParentTokens = envjsonParse.SelectTokens(parentJPath, false);
+                IEnumerable<JToken> envjsonChildTokens = envjsonParse.SelectTokens(childJPath, false);
+                // Safely get the first element and convert to JObject if available, else create an empty JObject
+                if (envjsonParentTokens.FirstOrDefault() is not JObject envParent)
+                {
+                    envParent = new JObject();
+                }
+                if (envjsonChildTokens.FirstOrDefault() is not JObject envChild)
+                {
+                    envChild = new JObject();
+                }
+                // Merge (union) both environments
+                envParent.Merge(envChild, new JsonMergeSettings
+                {
+                    MergeArrayHandling = MergeArrayHandling.Union
+                });
+                // Convert back to JToken
+                JToken envjsonTokens = JToken.FromObject(envParent);
+                Log.Information($"Number of variables matched: {envjsonTokens.Count()}");
                 if (!envjsonTokens.Any())
                 {
                     Log.Error("Puppet Classifier result returned no values while trying to filter, is Environment query data correct?");
                     return StatusCode(500, "Puppet Classifier result returned no values while trying to match on filter, check for valid environment name.");
                 }
-                // Use First element returned from JArray, as there should only be one, but this will return only a single JObject
-                hieraData.ConsoleVariables = envjsonTokens.First();
-                //hieraData.ConsoleVariables = JsonConvert.SerializeObject(envjsonTokens.ElementAt(0)).ToString();
-                Log.Information($"Puppet Console Variables for environment {hieraSearchRequest.Environment}: {hieraData.ConsoleVariables.ToString()}");
+                Log.Information($"Puppet Console Variables for environment {hieraSearchRequest.Environment}: {envjsonTokens.ToString()}");
+                Log.Debug($"Creating temp file: {tmpfile} with Puppet Console variables...");
+                await System.IO.File.WriteAllTextAsync(tmpfile, envjsonTokens.ToString());
             }
-            string tmpfile = "/tmp/" + Path.GetRandomFileName();
-            Log.Debug($"Creating temp file: {tmpfile} with Puppet Console variables...");
-            await System.IO.File.WriteAllTextAsync(tmpfile, hieraData.ConsoleVariables.ToString());
-            ////////////////////////////////////////////
-            /// Execute Puppet lookup CMD for result ///
-            ////////////////////////////////////////////
+            //////////////////////////////////////////
+            // Execute Puppet lookup CMD for result //
+            //////////////////////////////////////////
             Log.Debug($"Executing Puppet lookup CMD...");
             int exitCode = 0;
             var (lookupResult, lookupError) = await ReadAsync("/usr/local/bin/puppet",
@@ -134,16 +155,17 @@ namespace PuppetApi.Controllers
             return Ok("{ \"HieraSearchValue\": " + hieraData.HieraSearchValue + " }");
         }
         /// <summary>
-        /// Execute puppet command with querystring parameters on puppet master
+        /// Execute "puppet" command with querystring parameters on puppet master. 
+        /// Include all commands and arguments to be executed following the "puppet" cmd
         /// </summary>
         /// <param name="PuppetCMDRequest"></param>
         /// <returns></returns>
-        [Route("api/command")]
+        [Route("api/puppet-cmd")]
         [HttpGet]
         public async Task<IActionResult> PuppetCMD([FromQuery] string PuppetCMDRequest)
         {
             // Psuedo code:
-            // 1. Execute PUPPET command with querystring data, parsing and limited data validation
+            // 1. Execute "puppet" command with querystring data, parsing and limited data validation
             // 2. Forbid multi-command injection
             // 3. Return status of command
 
@@ -175,6 +197,56 @@ namespace PuppetApi.Controllers
                 return NotFound("puppet returned null or empty string.");
             }
             Log.Information($"puppet RESULT: {cmdResult}");
+            return Ok(cmdResult);
+        }
+        /// <summary>
+        /// Execute "puppetserver ca" command with querystring parameters on puppet master. 
+        /// Include all commands and arguments to be executed following the "puppetserver ca" cmd
+        /// </summary>
+        /// <param name="PuppetServerCARequest"></param>
+        /// <returns></returns>
+        [Route("api/puppetserver-ca-cmd")]
+        [HttpGet]
+        public async Task<IActionResult> PuppetServerCMD([FromQuery] string PuppetServerCARequest)
+        {
+            // Psuedo code:
+            // 1. Execute "puppetserver ca" command with querystring data, parsing and limited data validation
+            // 2. Forbid multi-command injection
+            // 3. Return status of command
+
+            Log.Information($"GET query data: {PuppetServerCARequest}");
+            ///////////////////////////////
+            /// Execute PuppetServerCMD ///
+            ///////////////////////////////
+            Log.Information($"Executing puppetserver ca CMD...");
+            Log.Information($"QueryString: {PuppetServerCARequest}");
+            if (new string[] { "setup", "migrate", "import" }.Any(s => PuppetServerCARequest.ToLower().Contains(s)))
+            {
+                Log.Warning("WARNING: Forbidden to setup/migrate/import puppet master CA");
+                return StatusCode(501, "Forbidden to setup/migrate/import puppet master CA");
+            }
+            if (new string[] { ";", "&&", "||" }.Any(s => PuppetServerCARequest.ToLower().Contains(s)))
+            {
+                Log.Warning("WARNING: Forbidden to execute multiple commands");
+                return StatusCode(501, "Forbidden to execute multiple commands");
+            }
+            //string[] QueryString = PuppetServerCARequest.Split(' ');
+            int exitCode = 0;
+            var (cmdResult, cmdError) = await ReadAsync("/opt/puppetlabs/bin/puppetserver",
+                $"ca {PuppetServerCARequest}",
+                handleExitCode: code => (exitCode = code) < 2);
+            if (exitCode != 0)
+            {
+                Log.Error($"puppetserver ca RESULT: {cmdResult}");
+                Log.Error($"puppetserver ca ERROR: {cmdError}");
+                return StatusCode(500, $"RESULT returned from: \"puppetserver ca {PuppetServerCARequest}\":\n{cmdResult}\nERROR: {cmdError}\n");
+            }
+            if (System.String.IsNullOrEmpty(cmdResult))
+            {
+                Log.Error("puppetserver ca returned null or empty string.");
+                return NotFound("puppetserver ca returned null or empty string.");
+            }
+            Log.Information($"puppetserver ca RESULT: {cmdResult}");
             return Ok(cmdResult);
         }
     }
